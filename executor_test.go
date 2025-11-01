@@ -265,6 +265,15 @@ func TestVars(t *testing.T) {
 	)
 }
 
+func TestVarsFromTask(t *testing.T) {
+	t.Parallel()
+	NewExecutorTest(t,
+		WithExecutorOptions(
+			task.WithDir("testdata/vars_from_task"),
+		),
+	)
+}
+
 func TestRequires(t *testing.T) {
 	t.Parallel()
 	NewExecutorTest(t,

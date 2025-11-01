@@ -11,6 +11,7 @@ type Var struct {
 	Value any
 	Live  any
 	Sh    *string
+	Task  *string
 	Ref   string
 	Dir   string
 }
@@ -23,21 +24,23 @@ func (v *Var) UnmarshalYAML(node *yaml.Node) error {
 			key = node.Content[0].Value
 		}
 		switch key {
-		case "sh", "ref", "map":
+		case "sh", "task", "ref", "map":
 			var m struct {
-				Sh  *string
-				Ref string
-				Map any
+				Sh   *string
+				Task *string
+				Ref  string
+				Map  any
 			}
 			if err := node.Decode(&m); err != nil {
 				return errors.NewTaskfileDecodeError(err, node)
 			}
 			v.Sh = m.Sh
+			v.Task = m.Task
 			v.Ref = m.Ref
 			v.Value = m.Map
 			return nil
 		default:
-			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "ref", "map" or using a scalar value`, key)
+			return errors.NewTaskfileDecodeError(nil, node).WithMessage(`%q is not a valid variable type. Try "sh", "task", "ref", "map" or using a scalar value`, key)
 		}
 	default:
 		var value any

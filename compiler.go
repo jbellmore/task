@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +28,9 @@ type Compiler struct {
 	TaskfileVars *ast.Vars
 
 	Logger *logger.Logger
+
+	// TaskRunner is a function that can execute a task and return its output
+	TaskRunner func(ctx context.Context, taskName string, output io.Writer) error
 
 	dynamicCache   map[string]string
 	muDynamicCache sync.Mutex
@@ -75,7 +79,7 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 				return err
 			}
 			// If the variable is already set, we can set it and return
-			if newVar.Value != nil || newVar.Sh == nil {
+			if newVar.Value != nil || (newVar.Sh == nil && newVar.Task == nil) {
 				result.Set(k, ast.Var{Value: newVar.Value})
 				return nil
 			}
@@ -148,15 +152,25 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	c.muDynamicCache.Lock()
 	defer c.muDynamicCache.Unlock()
 
-	// If the variable is not dynamic or it is empty, return an empty string
-	if v.Sh == nil || *v.Sh == "" {
+	// Determine the cache key and type of dynamic variable
+	var cacheKey string
+	var isShVar, isTaskVar bool
+
+	if v.Sh != nil && *v.Sh != "" {
+		cacheKey = "sh:" + *v.Sh
+		isShVar = true
+	} else if v.Task != nil && *v.Task != "" {
+		cacheKey = "task:" + *v.Task
+		isTaskVar = true
+	} else {
+		// If the variable is not dynamic or it is empty, return an empty string
 		return "", nil
 	}
 
 	if c.dynamicCache == nil {
 		c.dynamicCache = make(map[string]string, 30)
 	}
-	if result, ok := c.dynamicCache[*v.Sh]; ok {
+	if result, ok := c.dynamicCache[cacheKey]; ok {
 		return result, nil
 	}
 
@@ -166,24 +180,44 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 	}
 
 	var stdout bytes.Buffer
-	opts := &execext.RunCommandOptions{
-		Command: *v.Sh,
-		Dir:     dir,
-		Stdout:  &stdout,
-		Stderr:  c.Logger.Stderr,
-		Env:     e,
-	}
-	if err := execext.RunCommand(context.Background(), opts); err != nil {
-		return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
+	var result string
+
+	if isShVar {
+		opts := &execext.RunCommandOptions{
+			Command: *v.Sh,
+			Dir:     dir,
+			Stdout:  &stdout,
+			Stderr:  c.Logger.Stderr,
+			Env:     e,
+		}
+		if err := execext.RunCommand(context.Background(), opts); err != nil {
+			return "", fmt.Errorf(`task: Command "%s" failed: %s`, opts.Command, err)
+		}
+
+		// Trim a single trailing newline from the result to make most command
+		// output easier to use in shell commands.
+		result = strings.TrimSuffix(stdout.String(), "\r\n")
+		result = strings.TrimSuffix(result, "\n")
+
+		c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
+	} else if isTaskVar {
+		if c.TaskRunner == nil {
+			return "", fmt.Errorf("task: cannot execute task %q for variable: TaskRunner not configured. This is a configuration error - the TaskRunner should be set during compiler initialization", *v.Task)
+		}
+
+		if err := c.TaskRunner(context.Background(), *v.Task, &stdout); err != nil {
+			return "", fmt.Errorf(`task: failed to get output from task "%s": %w`, *v.Task, err)
+		}
+
+		// Trim a single trailing newline from the result to make most command
+		// output easier to use in shell commands.
+		result = strings.TrimSuffix(stdout.String(), "\r\n")
+		result = strings.TrimSuffix(result, "\n")
+
+		c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable from task: %q result: %q\n", *v.Task, result)
 	}
 
-	// Trim a single trailing newline from the result to make most command
-	// output easier to use in shell commands.
-	result := strings.TrimSuffix(stdout.String(), "\r\n")
-	result = strings.TrimSuffix(result, "\n")
-
-	c.dynamicCache[*v.Sh] = result
-	c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
+	c.dynamicCache[cacheKey] = result
 
 	return result, nil
 }

@@ -219,6 +219,7 @@ func (e *Executor) setupCompiler() error {
 		TaskfileEnv:    e.Taskfile.Env,
 		TaskfileVars:   e.Taskfile.Vars,
 		Logger:         e.Logger,
+		TaskRunner:     e.runTaskForVar,
 	}
 	return nil
 }

@@ -102,7 +102,7 @@ func (vars *Vars) ToCacheMap() (m map[string]any) {
 	vars.mutex.RLock()
 	m = make(map[string]any, vars.Len())
 	for k, v := range vars.All() {
-		if v.Sh != nil && *v.Sh != "" {
+		if (v.Sh != nil && *v.Sh != "") || (v.Task != nil && *v.Task != "") {
 			// Dynamic variable is not yet resolved; trigger
 			// <no value> to be used in templates.
 			continue

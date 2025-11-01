@@ -1,0 +1,4 @@
+task: [use-var] echo "Value is hello-from-task"
+Value is hello-from-task
+task: [use-multiple-vars] echo "VAR1=hello-from-task VAR2=42"
+VAR1=hello-from-task VAR2=42
