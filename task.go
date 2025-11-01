@@ -253,7 +253,8 @@ func (e *Executor) runTaskForVar(ctx context.Context, taskName string, w io.Writ
 
 	// Redirect stdout to capture the task output
 	e.Stdout = w
-	e.Stderr = io.Discard
+	// Stderr goes to the logger for debugging, not captured in the variable
+	e.Stderr = e.Logger.Stderr
 	// Silence the task to prevent extra output
 	e.Silent = true
 	// Use interleaved output to capture directly without buffering

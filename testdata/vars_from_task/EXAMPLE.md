@@ -51,7 +51,7 @@ tasks:
       - echo "Got result: {{.RESULT}}"
 ```
 
-The output will capture both the dependency output and the main task output.
+**Note**: Only stdout is captured in the variable. Stderr is logged for debugging but not included in the variable value. The captured stdout will include output from both the task and all its dependencies.
 
 ## Multiple Variables from Tasks
 

@@ -202,11 +202,11 @@ func (c *Compiler) HandleDynamicVar(v ast.Var, dir string, e []string) (string, 
 		c.Logger.VerboseErrf(logger.Magenta, "task: dynamic variable: %q result: %q\n", *v.Sh, result)
 	} else if isTaskVar {
 		if c.TaskRunner == nil {
-			return "", fmt.Errorf("task: cannot execute task %q for variable: TaskRunner not configured", *v.Task)
+			return "", fmt.Errorf("task: cannot execute task %q for variable: TaskRunner not configured. This is a configuration error - the TaskRunner should be set during compiler initialization", *v.Task)
 		}
 
 		if err := c.TaskRunner(context.Background(), *v.Task, &stdout); err != nil {
-			return "", fmt.Errorf(`task: Task "%s" failed: %s`, *v.Task, err)
+			return "", fmt.Errorf(`task: failed to get output from task "%s": %w`, *v.Task, err)
 		}
 
 		// Trim a single trailing newline from the result to make most command
