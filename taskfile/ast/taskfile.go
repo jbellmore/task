@@ -59,8 +59,8 @@ func (t1 *Taskfile) Merge(t2 *Taskfile, include *Include) error {
 	if t1.Tasks == nil {
 		t1.Tasks = NewTasks()
 	}
-	// Don't merge included taskfile vars into parent vars to prevent variable leaking
-	// t1.Vars.Merge(t2.Vars, include)
+	// Note: We intentionally do NOT merge t2.Vars into t1.Vars here to prevent
+	// variable leaking from included taskfiles to the parent taskfile
 	t1.Env.Merge(t2.Env, include)
 	return t1.Tasks.Merge(t2.Tasks, include, t2.Vars)
 }
