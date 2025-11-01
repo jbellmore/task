@@ -177,8 +177,11 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
 		}
-		// Always set IncludedTaskfileVars to prevent variable leaking from parent
-		task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
+		// Only set IncludedTaskfileVars if it hasn't been set yet to prevent overwriting
+		// when the same task is merged multiple times in nested includes
+		if task.IncludedTaskfileVars == nil || task.IncludedTaskfileVars.Len() == 0 {
+			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
+		}
 
 		if _, ok := t1.Get(taskName); ok {
 			return &errors.TaskNameFlattenConflictError{
