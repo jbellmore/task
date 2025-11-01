@@ -52,11 +52,6 @@ func (e *Executor) Run(ctx context.Context, calls ...*Call) error {
 		}
 
 		if task.Internal && !e.AllowInternal {
-			if _, ok := err.(*errors.TaskNotFoundError); ok {
-				if _, err := e.ListTasks(ListOptions{ListOnlyTasksWithDescriptions: true}); err != nil {
-					return err
-				}
-			}
 			return &errors.TaskInternalError{TaskName: call.Task}
 		}
 	}
