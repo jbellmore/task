@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"slices"
@@ -238,6 +239,41 @@ func (e *Executor) RunTask(ctx context.Context, call *Call) error {
 		e.Logger.VerboseErrf(logger.Magenta, "task: %q finished\n", call.Task)
 		return nil
 	})
+}
+
+// runTaskForVar is a helper function that runs a task and captures its output
+// for use as a dynamic variable. This is used when a variable is defined with
+// task: instead of sh:
+func (e *Executor) runTaskForVar(ctx context.Context, taskName string, w io.Writer) error {
+	// Store the original values to restore later
+	originalStdout := e.Stdout
+	originalStderr := e.Stderr
+	originalSilent := e.Silent
+	originalOutput := e.Output
+
+	// Redirect stdout to capture the task output
+	e.Stdout = w
+	e.Stderr = io.Discard
+	// Silence the task to prevent extra output
+	e.Silent = true
+	// Use interleaved output to capture directly without buffering
+	e.Output = output.Interleaved{}
+
+	// Restore original values when done
+	defer func() {
+		e.Stdout = originalStdout
+		e.Stderr = originalStderr
+		e.Silent = originalSilent
+		e.Output = originalOutput
+	}()
+
+	// Run the task
+	call := &Call{
+		Task:     taskName,
+		Indirect: true,
+		Silent:   true,
+	}
+	return e.RunTask(ctx, call)
 }
 
 func (e *Executor) mkdir(t *ast.Task) error {

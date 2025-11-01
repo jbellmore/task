@@ -1,0 +1,25 @@
+version: '3'
+
+tasks:
+  setup:
+    cmds:
+      - echo Setting up...
+    silent: true
+
+  generate-with-deps:
+    deps:
+      - setup
+    cmds:
+      - echo value-with-deps
+    silent: true
+
+  use-task-with-deps:
+    vars:
+      RESULT:
+        task: generate-with-deps
+    cmds:
+      - echo "Got result {{.RESULT}}"
+
+  default:
+    cmds:
+      - task: use-task-with-deps

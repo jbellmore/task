@@ -120,7 +120,7 @@ func (e *Executor) compiledTask(call *Call, evaluateShVars bool) (*ast.Task, err
 	if evaluateShVars {
 		for k, v := range new.Env.All() {
 			// If the variable is not dynamic, we can set it and return
-			if v.Value != nil || v.Sh == nil {
+			if v.Value != nil || (v.Sh == nil && v.Task == nil) {
 				new.Env.Set(k, ast.Var{Value: v.Value})
 				continue
 			}

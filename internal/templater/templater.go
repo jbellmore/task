@@ -126,6 +126,7 @@ func ReplaceVarWithExtra(v ast.Var, cache *Cache, extra map[string]any) ast.Var 
 	return ast.Var{
 		Value: ReplaceWithExtra(v.Value, cache, extra),
 		Sh:    ReplaceWithExtra(v.Sh, cache, extra),
+		Task:  ReplaceWithExtra(v.Task, cache, extra),
 		Live:  v.Live,
 		Ref:   v.Ref,
 		Dir:   v.Dir,

@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  generate-cached:
+    cmds:
+      - echo cached-value
+    sources:
+      - Taskfile_status.yml
+    generates:
+      - .task-output
+    silent: true
+
+  use-cached:
+    vars:
+      CACHED:
+        task: generate-cached
+    cmds:
+      - echo "Cached value {{.CACHED}}"
+
+  default:
+    cmds:
+      - task: use-cached

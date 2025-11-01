@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  generate-value:
+    cmds:
+      - echo "hello-from-task"
+    silent: true
+
+  generate-number:
+    cmds:
+      - echo "42"
+    silent: true
+
+  use-var:
+    vars:
+      MY_VAR:
+        task: generate-value
+    cmds:
+      - echo "Value is {{.MY_VAR}}"
+
+  use-multiple-vars:
+    vars:
+      VAR1:
+        task: generate-value
+      VAR2:
+        task: generate-number
+    cmds:
+      - echo "VAR1={{.VAR1}} VAR2={{.VAR2}}"
+
+  default:
+    cmds:
+      - task: use-var
+      - task: use-multiple-vars
