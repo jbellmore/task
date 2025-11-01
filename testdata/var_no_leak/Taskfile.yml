@@ -1,0 +1,13 @@
+version: '3'
+
+vars:
+  PARENT_VAR: parent_value
+
+includes:
+  child: ./child/Taskfile.yml
+
+tasks:
+  parent-task:
+    cmds:
+      - echo "{{.PARENT_VAR}}"
+      - echo "{{.CHILD_VAR}}"

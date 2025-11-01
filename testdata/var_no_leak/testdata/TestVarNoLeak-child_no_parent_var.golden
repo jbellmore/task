@@ -1,0 +1,4 @@
+task: [child:child-task] echo "child_value"
+child_value
+task: [child:child-task] echo ""
+

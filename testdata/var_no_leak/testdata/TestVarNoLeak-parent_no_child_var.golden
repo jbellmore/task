@@ -1,0 +1,4 @@
+task: [parent-task] echo "parent_value"
+parent_value
+task: [parent-task] echo ""
+

@@ -176,6 +176,11 @@ func (t1 *Tasks) Merge(t2 *Tasks, include *Include, includedTaskfileVars *Vars) 
 				task.IncludeVars = NewVars()
 			}
 			task.IncludeVars.Merge(include.Vars, nil)
+		}
+		// Only set IncludedTaskfileVars if it hasn't been set yet to prevent overwriting
+		// when the same task is merged multiple times in nested includes.
+		// Check for nil first to avoid potential issues, then check if empty.
+		if task.IncludedTaskfileVars == nil || task.IncludedTaskfileVars.Len() == 0 {
 			task.IncludedTaskfileVars = includedTaskfileVars.DeepCopy()
 		}
 

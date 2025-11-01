@@ -1,0 +1,10 @@
+version: '3'
+
+vars:
+  CHILD_VAR: child_value
+
+tasks:
+  child-task:
+    cmds:
+      - echo "{{.CHILD_VAR}}"
+      - echo "{{.PARENT_VAR}}"
