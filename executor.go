@@ -47,6 +47,7 @@ type (
 		Color               bool
 		Concurrency         int
 		Interval            time.Duration
+		AllowInternal       bool
 
 		// I/O
 		Stdin  io.Reader
@@ -181,6 +182,21 @@ type forceAllOption struct {
 
 func (o *forceAllOption) ApplyToExecutor(e *Executor) {
 	e.ForceAll = o.forceAll
+}
+
+// WithAllowInternal allows the [Executor] to run tasks marked as internal
+// directly from the command line. By default, internal tasks can only be
+// called from other tasks.
+func WithAllowInternal(allowInternal bool) ExecutorOption {
+	return &allowInternalOption{allowInternal}
+}
+
+type allowInternalOption struct {
+	allowInternal bool
+}
+
+func (o *allowInternalOption) ApplyToExecutor(e *Executor) {
+	e.AllowInternal = o.allowInternal
 }
 
 // WithInsecure allows the [Executor] to make insecure connections when reading
