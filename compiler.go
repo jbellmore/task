@@ -108,9 +108,13 @@ func (c *Compiler) getVariables(t *ast.Task, call *Call, evaluateShVars bool) (*
 			return nil, err
 		}
 	}
-	for k, v := range c.TaskfileVars.All() {
-		if err := rangeFunc(k, v); err != nil {
-			return nil, err
+	// Only apply root taskfile vars if this task is not from an included taskfile
+	// Tasks from included taskfiles should only use their own IncludedTaskfileVars
+	if t == nil || t.IncludedTaskfileVars.Len() == 0 {
+		for k, v := range c.TaskfileVars.All() {
+			if err := rangeFunc(k, v); err != nil {
+				return nil, err
+			}
 		}
 	}
 	if t != nil {

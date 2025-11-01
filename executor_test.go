@@ -938,6 +938,28 @@ func TestVarInheritance(t *testing.T) {
 	}
 }
 
+func TestVarNoLeak(t *testing.T) {
+	t.Parallel()
+
+	// Test that parent taskfile vars don't leak to included taskfile
+	NewExecutorTest(t,
+		WithName("child_no_parent_var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/var_no_leak"),
+		),
+		WithTask("child:child-task"),
+	)
+
+	// Test that included taskfile vars don't leak to parent taskfile
+	NewExecutorTest(t,
+		WithName("parent_no_child_var"),
+		WithExecutorOptions(
+			task.WithDir("testdata/var_no_leak"),
+		),
+		WithTask("parent-task"),
+	)
+}
+
 func TestFuzzyModel(t *testing.T) {
 	t.Parallel()
 
