@@ -1347,6 +1347,26 @@ func TestInternalTask(t *testing.T) {
 	}
 }
 
+func TestInternalTaskWithAllowInternalFlag(t *testing.T) {
+	t.Parallel()
+
+	const dir = "testdata/internal_task"
+	var buff bytes.Buffer
+	e := task.NewExecutor(
+		task.WithDir(dir),
+		task.WithStdout(&buff),
+		task.WithStderr(&buff),
+		task.WithSilent(true),
+		task.WithAllowInternal(true),
+	)
+	require.NoError(t, e.Setup())
+
+	// With AllowInternal flag, internal task should run successfully
+	err := e.Run(t.Context(), &task.Call{Task: "task-3"})
+	require.NoError(t, err)
+	assert.Equal(t, "Hello, World!\n", buff.String())
+}
+
 func TestIncludesShadowedDefault(t *testing.T) {
 	t.Parallel()
 
